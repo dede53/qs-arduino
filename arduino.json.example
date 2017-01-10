@@ -1,9 +1,11 @@
 {
-	"arduinos": [
+    "loglevel": 1,
+    "port": 2222,
+    "arduinos": [
 		{
 			"id":0,
 			"ip": "192.168.178.2",
 			"port": 49880
 		}
-	]
+    ]
 }
