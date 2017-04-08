@@ -5,37 +5,42 @@ var express					=	require('express.io');
 var app						=	express().http().io();
 var arduino					=	new adapter("arduino");
 var timeout					=	"";
-
+// console.log(JSON.parse(arduino.settings));
 process.on("message", function(data){
-	var data = JSON.parse(data);
-	arduino.log.debug(data);
-	switch(data.protocol){
-		case "setSetting":
-			arduino.setSetting(data.data);
-			break;
-		case "ir":
-			if(data.status == 1){
-				var msg = "sendIr:NEC:" + data.data.CodeOn + ":32::";
-			}else{
-				var msg = "sendIr:NEC:" + data.data.CodeOff + ":32::";
-			}
-			sendUDP(msg);
-			break;
-		case "344":
-			var msg = "send433:" + data.status + ":" + data.data.CodeOn + ":" + data.data.CodeOff + "::";
-			sendUDP(msg);
-			break;
-		case "pinAnalog":
-			var msg = "pinAnalog:" + data.data.CodeOn + ":" + data.status + "::";
-			sendUDP(msg);
-			break;
-		case "pinDigital":
-			var msg = "pinDigital:" + data.data.CodeOn + ":" + data.status + "::";
-			sendUDP(msg);
-			break;
-		default:
-			arduino.log.error("Problem mit dem Protocol:" + data.protocol);
-			break;
+	if(data.settings){
+		arduino.settings = data.settings;
+	}
+	arduino.log.info(data);
+	if(data.data){
+		arduino.log.debug(data.data.protocol);
+		switch(data.data.protocol){
+			case "setSetting":
+				arduino.setSetting(data.data);
+				break;
+			case "ir":
+				if(data.status == 1){
+					var msg = "sendIr:NEC:" + data.data.CodeOn + ":32::";
+				}else{
+					var msg = "sendIr:NEC:" + data.data.CodeOff + ":32::";
+				}
+				sendUDP(msg);
+				break;
+			case "344":
+				var msg = "send433:" + data.status + ":" + data.data.CodeOn + ":" + data.data.CodeOff + "::";
+				sendUDP(msg);
+				break;
+			case "pinAnalog":
+				var msg = "pinAnalog:" + data.data.CodeOn + ":" + data.status + "::";
+				sendUDP(msg);
+				break;
+			case "pinDigital":
+				var msg = "pinDigital:" + data.data.CodeOn + ":" + data.status + "::";
+				sendUDP(msg);
+				break;
+			default:
+				arduino.log.error("Problem mit dem Protocol:" + data.protocol);
+				break;
+		}
 	}
 });
 
