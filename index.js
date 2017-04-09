@@ -6,9 +6,9 @@ var app						=	express().http().io();
 var arduino					=	new adapter("arduino");
 var timeout					=	"";
 
-process.on("message", function(data){
-	var data		= data.data;
-	var status		= data.status;
+process.on("message", function(request){
+	var data		= request.data;
+	var status		= request.status;
 	if(data){
 		arduino.log.debug(data.protocol);
 		switch(data.protocol){
@@ -16,7 +16,7 @@ process.on("message", function(data){
 				arduino.setSetting(data);
 				break;
 			case "ir":
-				if(data.status == 1){
+				if(status == 1){
 					var msg = "sendIr:NEC:" + data.CodeOn + ":32::";
 				}else{
 					var msg = "sendIr:NEC:" + data.CodeOff + ":32::";
