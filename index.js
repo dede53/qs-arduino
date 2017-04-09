@@ -5,36 +5,34 @@ var express					=	require('express.io');
 var app						=	express().http().io();
 var arduino					=	new adapter("arduino");
 var timeout					=	"";
-// console.log(JSON.parse(arduino.settings));
+
 process.on("message", function(data){
-	if(data.settings){
-		arduino.settings = data.settings;
-	}
-	arduino.log.info(data);
-	if(data.data){
-		arduino.log.debug(data.data.protocol);
-		switch(data.data.protocol){
+	var data		= data.data;
+	var status		= data.status;
+	if(data){
+		arduino.log.debug(data.protocol);
+		switch(data.protocol){
 			case "setSetting":
-				arduino.setSetting(data.data);
+				arduino.setSetting(data);
 				break;
 			case "ir":
 				if(data.status == 1){
-					var msg = "sendIr:NEC:" + data.data.CodeOn + ":32::";
+					var msg = "sendIr:NEC:" + data.CodeOn + ":32::";
 				}else{
-					var msg = "sendIr:NEC:" + data.data.CodeOff + ":32::";
+					var msg = "sendIr:NEC:" + data.CodeOff + ":32::";
 				}
 				sendUDP(msg);
 				break;
 			case "344":
-				var msg = "send433:" + data.status + ":" + data.data.CodeOn + ":" + data.data.CodeOff + "::";
+				var msg = "send433:" + status + ":" + data.CodeOn + ":" + data.CodeOff + "::";
 				sendUDP(msg);
 				break;
 			case "pinAnalog":
-				var msg = "pinAnalog:" + data.data.CodeOn + ":" + data.status + "::";
+				var msg = "pinAnalog:" + data.CodeOn + ":" + status + "::";
 				sendUDP(msg);
 				break;
 			case "pinDigital":
-				var msg = "pinDigital:" + data.data.CodeOn + ":" + data.status + "::";
+				var msg = "pinDigital:" + data.CodeOn + ":" + status + "::";
 				sendUDP(msg);
 				break;
 			default:
