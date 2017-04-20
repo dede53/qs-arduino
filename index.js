@@ -1,14 +1,14 @@
 var dgram					=	require('dgram');
 var adapter					=	require('../../adapter-lib.js');
 var bodyParser				=	require('body-parser');
-var express					=	require('express.io');
+var express					=	require('express.oi');
 var app						=	express().http().io();
 var arduino					=	new adapter("arduino");
 var timeout					=	"";
 
 process.on("message", function(request){
-	var data		= request.data;
-	var status		= request.status;
+	var data				= request.data;
+	var status				= request.status;
 	if(data){
 		arduino.log.debug(data.protocol);
 		switch(data.protocol){
@@ -74,7 +74,6 @@ app.get('/:id/:type/:pin/:value', function(req, res){
 
 
 app.post('/setPin', function(req, res){
-	// console.log("Neue Daten vom Arduino!");
 	switch(req.body.type){
 		case 'digital':
 			if(req.body.value == 0){
