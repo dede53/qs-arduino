@@ -4,16 +4,20 @@ var bodyParser				=	require('body-parser');
 var express					=	require('express.oi');
 var app						=	express().http().io();
 var arduino					=	new adapter("arduino");
+var status					=	{};
 var timeout					=	"";
 
 process.on("message", function(request){
 	var data				= request.data;
 	var status				= request.status;
 	if(data){
-		arduino.log.debug(data.protocol);
 		switch(data.protocol){
 			case "setSetting":
 				arduino.setSetting(data);
+				break;
+			case "saveTemp":
+				var msg = "saveTemp::";
+				sendUDP(msg);
 				break;
 			case "ir":
 				if(status == 1){
@@ -35,11 +39,27 @@ process.on("message", function(request){
 				var msg = "pinDigital:" + data.CodeOn + ":" + status + "::";
 				sendUDP(msg);
 				break;
+			case "pilightRaw":
+				if(status == 1){
+					var data = data.CodeOn.split(';');
+				}else{
+					var data = data.CodeOff.split(';');
+				}
+				data[0] = data[0].slice(2, data[0].length);
+				data[1] = data[1].slice(2, data[1].length - 1);
+				var msg = "pilightRaw:" + data[0] + ":" + data[1] + "::";
+				sendUDP(msg);
+				break;
 			default:
 				arduino.log.error("Problem mit dem Protocol:" + data.protocol);
 				break;
 		}
 	}
+});
+
+arduino.settings.arduinos.forEach(function(arduino){
+	status[arduino.id] = new createArduino(arduino);
+	status[arduino.id].start();
 });
 
 function sendUDP(msg) {
@@ -55,23 +75,36 @@ function sendUDP(msg) {
 
 app.use(bodyParser.json());									// for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true }));			// for parsing application/x-www-form-urlencoded
+
 app.get('/:id/:type/:pin/:value', function(req, res){
 	switch(req.params.type){
 		case 'digital':
 			if(req.params.value == 0){
-				arduino.setVariable("arduino." + req.params.id + ".digital." + req.params.pin, false);
+				var value = false;
 			}else{
-				arduino.setVariable("arduino." + req.params.id + ".digital." + req.params.pin, true);
+				var value = true;
 			}
+			arduino.setVariable("arduino." + req.params.id + ".digital." + req.params.pin, value);
 			break;
 		default:
 			arduino.setVariable("arduino." + req.params.id + ".analog." + req.params.pin, req.params.value);
 			break;
 	}
-	timeout = new Date().getTime();
 	res.json(200);
 });
 
+app.post('/active', function(req, res){
+	status[parseInt(req.body.arduinoID)].setActive(new Date().getTime());
+	res.sendStatus(200);
+});
+
+app.post('/setTemp', function(req, res){
+	arduino.setVariable('arduino.' + req.body.arduinoID + '.onewire.' + req.body.id, req.body.status);
+});
+
+app.post('/setVariable', function(req, res){
+	arduino.setVariable('arduino.' + req.body.arduinoID + '.' + req.body.id, req.body.status);
+});
 
 app.post('/setPin', function(req, res){
 	switch(req.body.type){
@@ -86,20 +119,54 @@ app.post('/setPin', function(req, res){
 			arduino.setVariable("arduino." + req.body.id + ".analog." + req.body.pin, req.body.value);
 			break;
 	}
-	timeout = new Date().getTime();
 	res.json(req.body);
 });
 
-setInterval(function(){
-	if(timeout < (new Date().getTime() - 5 * 1000)){
-		process.send({statusMessage:"nicht verbunden!"});
-	}else{
-		process.send({statusMessage:"Verbunden"});
-	}
-}, 10 * 1000);
-
 try{
-	app.listen(arduino.settings.port);
+	app.listen(arduino.settings.port, function(){
+		process.send({"statusMessage": "Läut auf Port:" + arduino.settings.port});
+	});
 }catch(e){
 	arduino.log.error(e);
+}
+
+
+function createArduino(settings){
+	this.arduino = settings;
+	this.setIP = function(ip){
+		this.arduino.ip = ip;
+	}
+	this.setPort = function(port){
+		this.arduino.port = port;
+	}
+	this.setStatus = function(value){
+		this.arduino.active = value;
+		process.send({longStatusMessage:status});
+	}
+	this.getStatus = function(){
+		return this.status;
+	}
+	this.setActive = function(timestamp){
+		this.arduino.lastActive = timestamp;
+	}
+	this.checkActive = function(){
+		if(this.arduino.lastActive < (new Date().getTime() - 70 * 1000)){
+			if(this.getStatus() != true){
+				this.setStatus(true);
+			}
+		}else{
+			if(this.getStatus() != false){
+				this.setStatus(false);
+			}
+		}
+	}
+	this.start = function(){
+		that = this;
+		this.interval = setInterval(function(){
+			that.checkActive();
+		}, 10 * 1000);
+	}
+	this.stop = function(){
+		clearInterval(this.interval);
+	}
 }
