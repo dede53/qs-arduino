@@ -150,7 +150,7 @@ function createArduino(settings){
 		this.arduino.lastActive = timestamp;
 	}
 	this.checkActive = function(){
-		if(this.arduino.lastActive < (new Date().getTime() - 70 * 1000)){
+		if(this.arduino.lastActive > new Date().getTime() - 70 * 1000){
 			if(this.getStatus() != true){
 				this.setStatus(true);
 			}
@@ -164,7 +164,7 @@ function createArduino(settings){
 		that = this;
 		this.interval = setInterval(function(){
 			that.checkActive();
-		}, 10 * 1000);
+		}, 20 * 1000);
 	}
 	this.stop = function(){
 		clearInterval(this.interval);
