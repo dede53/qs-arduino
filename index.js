@@ -7,9 +7,14 @@ var arduino					=	new adapter("arduino");
 var status					=	{};
 var timeout					=	"";
 
-process.on("message", function(request){
-	var data				= request.data;
-	var status				= request.status;
+process.on("message", function(data){
+	if(data.newStatus == "toggle"){
+		if(data.status == 1 || data.status == '1'){
+			data.newStatus = 0;
+		}else{
+			data.newStatus = 1;
+		}
+	}
 	if(data){
 		switch(data.protocol){
 			case "setSetting":
@@ -20,7 +25,7 @@ process.on("message", function(request){
 				sendUDP(msg);
 				break;
 			case "ir":
-				if(status == 1){
+				if(data.newStatus == 1){
 					var msg = "sendIr:NEC:" + data.CodeOn + ":32::";
 				}else{
 					var msg = "sendIr:NEC:" + data.CodeOff + ":32::";
@@ -28,19 +33,19 @@ process.on("message", function(request){
 				sendUDP(msg);
 				break;
 			case "344":
-				var msg = "send433:" + status + ":" + data.CodeOn + ":" + data.CodeOff + "::";
+				var msg = "send433:" + data.newStatus + ":" + data.CodeOn + ":" + data.CodeOff + "::";
 				sendUDP(msg);
 				break;
 			case "pinAnalog":
-				var msg = "pinAnalog:" + data.CodeOn + ":" + status + "::";
+				var msg = "pinAnalog:" + data.CodeOn + ":" + data.newStatus + "::";
 				sendUDP(msg);
 				break;
 			case "pinDigital":
-				var msg = "pinDigital:" + data.CodeOn + ":" + status + "::";
+				var msg = "pinDigital:" + data.CodeOn + ":" + data.newStatus + "::";
 				sendUDP(msg);
 				break;
 			case "pilightRaw":
-				if(status == 1){
+				if(data.newStatus == 1){
 					var data = data.CodeOn.split(';');
 				}else{
 					var data = data.CodeOff.split(';');
