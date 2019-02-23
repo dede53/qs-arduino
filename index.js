@@ -8,15 +8,7 @@ var arduino					=	new adapter("arduino");
 var status					=	{};
 var timeout					=	"";
 
-process.on("message", function(data){
-	for(var i in arduino.settings.arduinos){
-		status[arduino.settings.arduinos[id].id].switchDevice(data);
-	}
-	arduino.log.error("Anderer schaltvorgang!");
-		
-	if(data.adapter != "arduino"){
-		return;
-	}
+arduino.on("arduino", function(data){
 	if(data.newStatus == "toggle"){
 		if(data.status == 1 || data.status == '1'){
 			data.newStatus = 0;
@@ -71,6 +63,13 @@ process.on("message", function(data){
 	}
 });
 
+arduino.on("all", (data) =>{
+	for(var id in arduino.settings.arduinos){
+		status[arduino.settings.arduinos[id].id].switchDevice(data);
+	}
+	arduino.log.error("Anderer schaltvorgang!");
+});
+
 for(var id in arduino.settings.arduinos){
 	status[arduino.settings.arduinos[id].id] = new createArduino(arduino.settings.arduinos[id]);
 	status[arduino.settings.arduinos[id].id].start();
@@ -78,13 +77,7 @@ for(var id in arduino.settings.arduinos){
 
 function sendUDP(msg) {
 	for(var id in arduino.settings.arduinos){
-		var device = arduino.settings.arduinos[id];
-		var client = dgram.createSocket('udp4');
-		client.send(msg, 0, msg.length, device.port, device.ip, function(err, bytes) 
-		{
-			arduino.log.debug('udp://' + device.ip +':'+ device.port + "/" + msg);
-			client.close();
-		});
+		status[arduino.settings.arduinos[id].id].sendUDP(msg);
 	};
 }
 
@@ -166,7 +159,8 @@ function createArduino(settings){
 	}
 	this.setStatus = function(value){
 		this.arduino.active = value;
-		process.send({longStatusMessage:status});
+		// console.log(status);
+		// process.send({"longStatusMessage":response}); // circular structure to Object error
 	}
 	this.getStatus = function(){
 		return this.status;
@@ -195,14 +189,20 @@ function createArduino(settings){
 		clearInterval(this.interval);
 	}
 	this.switchDevice = function(data){
-		arduino.log.error(data.protocol);
-		request.get('http://' + this.arduino.ip + ':80/' + data.type + '/' + data.deviceid + '/' + data.newStatus, function(error, response, body){
+		request.get('http://' + this.arduino.ip + ':80/' + data.type + '/' + data.deviceid + '/' + data.newStatus, (error, response, body) => {
 			if(error){
 				arduino.log.error("Der status konnte ncht an den Arduino übermittelt werden!");
 				arduino.log.error(error);
 			}else{
-				arduino.log.debug("Status an Arduino gesendet");
+				arduino.log.debug("Status an Arduino("+ this.arduino.ip +") gesendet");
 			}
 		});
 	}
+	this.sendUDP = (msg) => {
+		var client = dgram.createSocket('udp4');
+		client.send(msg, 0, msg.length, this.arduino.port, this.arduino.ip, (err, bytes) => {
+			arduino.log.debug('sendUDP://' + this.arduino.ip +':'+ this.arduino.port + "/" + msg);
+			client.close();
+		});
+	};
 }
