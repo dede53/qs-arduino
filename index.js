@@ -63,11 +63,25 @@ arduino.on("arduino", function(data){
 	}
 });
 
-arduino.on("all", (data) =>{
+arduino.on("action", (data) =>{
 	for(var id in arduino.settings.arduinos){
 		status[arduino.settings.arduinos[id].id].switchDevice(data);
 	}
-	arduino.log.error("Anderer schaltvorgang!");
+	// arduino.log.error("Anderer schaltvorgang!");
+});
+
+arduino.on("alert", (data) => {
+	for(var id in arduino.settings.arduinos){
+		arduino.log.info(data);
+		status[arduino.settings.arduinos[id].id].setAlert(data);
+	}
+});
+
+arduino.on("variable", (data) => {
+	for(var id in arduino.settings.arduinos){
+		arduino.log.info(data);
+		status[arduino.settings.arduinos[id].id].setVariable(data);
+	}
 });
 
 for(var id in arduino.settings.arduinos){
@@ -101,9 +115,18 @@ app.get('/setPin/:id/:type/:pin/:value', function(req, res){
 	res.json(200);
 });
 
+app.get("/alert/:alert", (req, res) => {
+	process.send(req.params);
+	res.send(200).end();
+});
+
 app.get("/getSettings/:arduinoID", (req, res) => {
 	arduino.log.debug("Send settings:" + req.params.arduinoID);
-	res.send(arduino.settings.arduinos[req.params.arduinoID]);
+	if(arduino.settings.arduinos[req.params.arduinoID]){
+		res.send(arduino.settings.arduinos[req.params.arduinoID]);
+	}else{
+		res.sendStatus(404);
+	}
 });
 
 app.get('/switch/:type/:id/:status', function (req, res){
@@ -142,7 +165,7 @@ app.post('/setPin', function(req, res){
 
 try{
 	app.listen(arduino.settings.port, function(){
-		process.send({"statusMessage": "Läut auf Port:" + arduino.settings.port});
+		process.send({"statusMessage": "Läuft auf Port:" + arduino.settings.port});
 	});
 }catch(e){
 	arduino.log.error(e);
@@ -191,12 +214,36 @@ function createArduino(settings){
 	this.switchDevice = function(data){
 		request.get('http://' + this.arduino.ip + ':80/' + data.type + '/' + data.deviceid + '/' + data.newStatus, (error, response, body) => {
 			if(error){
+				arduino.log.error("Der status konnte nicht an den Arduino("+ this.arduino.ip +") übermittelt werden!");
+				arduino.log.error(error);
+			}else{
+				arduino.log.debug("Status an Arduino("+ this.arduino.ip +") gesendet");
+			}
+		});
+	}
+	this.setVariable = function(data){
+		request.get('http://' + this.arduino.ip + ':80/' + data.type + '/' + data.id + '/' + data.status, (error, response, body) => {
+			if(error){
 				arduino.log.error("Der status konnte ncht an den Arduino übermittelt werden!");
 				arduino.log.error(error);
 			}else{
 				arduino.log.debug("Status an Arduino("+ this.arduino.ip +") gesendet");
 			}
 		});
+	}
+	this.setAlert = function(data){
+		request.post({
+			url: 'http://' + this.arduino.ip + ':80/alert',
+			form: data
+		}, (error, response, body) => {
+			if(error){
+				arduino.log.error("Der status konnte nicht an den Arduino übermittelt werden!");
+				arduino.log.error(error);
+			}else{
+				arduino.log.debug("Status an Arduino("+ this.arduino.ip +") gesendet");
+			}
+		});
+		// send to arduino
 	}
 	this.sendUDP = (msg) => {
 		var client = dgram.createSocket('udp4');
