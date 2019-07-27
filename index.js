@@ -116,6 +116,7 @@ app.get('/setPin/:id/:type/:pin/:value', function(req, res){
 });
 
 app.get("/alert/:alert", (req, res) => {
+	arduino.log.debug(req.params);
 	process.send(req.params);
 	res.send(200).end();
 });
@@ -212,9 +213,12 @@ function createArduino(settings){
 		clearInterval(this.interval);
 	}
 	this.switchDevice = function(data){
-		request.get('http://' + this.arduino.ip + ':80/' + data.type + '/' + data.deviceid + '/' + data.newStatus, (error, response, body) => {
+		request.post({
+			url: 'http://' + this.arduino.ip + ':'+ this.arduino.port +'/action',
+			form: data
+		}, (error, response, body) => {
 			if(error){
-				arduino.log.error("Der status konnte nicht an den Arduino("+ this.arduino.ip +") übermittelt werden!");
+				arduino.log.error("Der status konnte nicht an den Arduino übermittelt werden!");
 				arduino.log.error(error);
 			}else{
 				arduino.log.debug("Status an Arduino("+ this.arduino.ip +") gesendet");
@@ -222,9 +226,12 @@ function createArduino(settings){
 		});
 	}
 	this.setVariable = function(data){
-		request.get('http://' + this.arduino.ip + ':80/' + data.type + '/' + data.id + '/' + data.status, (error, response, body) => {
+		request.post({
+			url: 'http://' + this.arduino.ip + ':'+ this.arduino.port +'/variable',
+			form: data
+		}, (error, response, body) => {
 			if(error){
-				arduino.log.error("Der status konnte ncht an den Arduino übermittelt werden!");
+				arduino.log.error("Der status konnte nicht an den Arduino übermittelt werden!");
 				arduino.log.error(error);
 			}else{
 				arduino.log.debug("Status an Arduino("+ this.arduino.ip +") gesendet");
@@ -233,7 +240,7 @@ function createArduino(settings){
 	}
 	this.setAlert = function(data){
 		request.post({
-			url: 'http://' + this.arduino.ip + ':80/alert',
+			url: 'http://' + this.arduino.ip + ':'+ this.arduino.port +'/alert',
 			form: data
 		}, (error, response, body) => {
 			if(error){
