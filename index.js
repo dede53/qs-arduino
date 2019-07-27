@@ -130,9 +130,18 @@ app.get("/getSettings/:arduinoID", (req, res) => {
 	}
 });
 
-app.get('/switch/:type/:id/:status', function (req, res){
-	process.send({action:req.params});
+app.get('/switch/:type/:id/:status/:counter?', function (req, res){
 	res.json(200);
+	if(parseInt(req.params.counter) > 1){
+		arduino.log.debug("switchdevice:" + req.params.counter + " times");
+		for(var i = 0; i < parseInt(req.params.counter); i++){
+			setInterval(() => {
+				process.send({action:req.params});
+			}, 300 * i);
+		};
+	}else{
+		process.send({action:req.params});
+	}
 });
 
 app.post('/active', function(req, res){
