@@ -223,7 +223,7 @@ function createArduino(settings){
 	}
 	this.switchDevice = function(data){
 		request.post({
-			url: 'http://' + this.arduino.ip + ':'+ this.arduino.port +'/action',
+			url: 'http://' + this.arduino.ip + ':80/action',
 			form: data
 		}, (error, response, body) => {
 			if(error){
@@ -236,7 +236,7 @@ function createArduino(settings){
 	}
 	this.setVariable = function(data){
 		request.post({
-			url: 'http://' + this.arduino.ip + ':'+ this.arduino.port +'/variable',
+			url: 'http://' + this.arduino.ip + ':80/variable',
 			form: data
 		}, (error, response, body) => {
 			if(error){
@@ -249,7 +249,7 @@ function createArduino(settings){
 	}
 	this.setAlert = function(data){
 		request.post({
-			url: 'http://' + this.arduino.ip + ':'+ this.arduino.port +'/alert',
+			url: 'http://' + this.arduino.ip + ':80/alert',
 			form: data
 		}, (error, response, body) => {
 			if(error){
