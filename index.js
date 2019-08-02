@@ -135,9 +135,9 @@ app.get('/switch/:type/:id/:status/:counter?', function (req, res){
 	if(parseInt(req.params.counter) > 1){
 		arduino.log.debug("switchdevice:" + req.params.counter + " times");
 		for(var i = 0; i < parseInt(req.params.counter); i++){
-			setInterval(() => {
+			// setTimeout(() => {
 				process.send({action:req.params});
-			}, 300 * i);
+			// }, 30 * i);
 		};
 	}else{
 		process.send({action:req.params});
@@ -223,7 +223,7 @@ function createArduino(settings){
 	}
 	this.switchDevice = function(data){
 		request.post({
-			url: 'http://' + this.arduino.ip + ':80/action',
+			url: 'http://' + this.arduino.ip + ':'+ this.arduino.port +'/action',
 			form: data
 		}, (error, response, body) => {
 			if(error){
@@ -236,7 +236,7 @@ function createArduino(settings){
 	}
 	this.setVariable = function(data){
 		request.post({
-			url: 'http://' + this.arduino.ip + ':80/variable',
+			url: 'http://' + this.arduino.ip + ':'+ this.arduino.port +'/variable',
 			form: data
 		}, (error, response, body) => {
 			if(error){
@@ -248,8 +248,11 @@ function createArduino(settings){
 		});
 	}
 	this.setAlert = function(data){
+		if(data.user != "all" && this.arduino.user != data.user){
+			return;
+		}
 		request.post({
-			url: 'http://' + this.arduino.ip + ':80/alert',
+			url: 'http://' + this.arduino.ip + ':'+ this.arduino.port +'/alert',
 			form: data
 		}, (error, response, body) => {
 			if(error){
