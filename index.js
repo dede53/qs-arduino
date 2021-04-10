@@ -102,8 +102,8 @@ function sendUDP(msg) {
 	};
 }
 
-this.app.use(express.urlencoded({ extended: true }));
-this.app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.get('/setPin/:id/:type/:pin/:value', function(req, res){
 	switch(req.params.type){
