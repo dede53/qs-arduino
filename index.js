@@ -232,7 +232,7 @@ function createArduino(settings){
 	}
 	this.switchDevice = function(data){
 		request.post({
-			url: 'http://' + this.arduino.ip + ':'+ this.arduino.update.action +'/action',
+			url: 'http://' + this.arduino.ip + ':'+ this.arduino.updates.action +'/action',
 			form: data
 		}, (error, response, body) => {
 			if(error){
@@ -244,7 +244,7 @@ function createArduino(settings){
 	}
 	this.setVariable = function(data){
         request.post({
-            url: 'http://' + this.arduino.ip + ':'+ this.arduino.update.variables +'/variable',
+            url: 'http://' + this.arduino.ip + ':'+ this.arduino.updates.variables +'/variable',
 			form: data
 		}, (error, response, body) => {
             if(error){
@@ -259,7 +259,7 @@ function createArduino(settings){
 			return;
 		}
 		request.post({
-			url: 'http://' + this.arduino.ip + ':'+ this.arduino.update.alerts +'/alert',
+			url: 'http://' + this.arduino.ip + ':'+ this.arduino.updates.alerts +'/alert',
 			form: data
 		}, (error, response, body) => {
 			if(error){
@@ -272,8 +272,8 @@ function createArduino(settings){
 	}
 	this.sendUDP = (msg) => {
 		var client = dgram.createSocket('udp4');
-		client.send(msg, 0, msg.length, this.arduino.update.udp, this.arduino.ip, (err, bytes) => {
-			arduino.log.debug('sendUDP://' + this.arduino.ip +':'+ this.arduino.update.udp + "/" + msg);
+		client.send(msg, 0, msg.length, this.arduino.updates.udp, this.arduino.ip, (err, bytes) => {
+			arduino.log.debug('sendUDP://' + this.arduino.ip +':'+ this.arduino.updates.udp + "/" + msg);
 			client.close();
 		});
 	};
