@@ -193,6 +193,9 @@ try{
 
 function createArduino(settings){
 	this.arduino = settings;
+    if(!this.arduino.updates){
+        this.arduino.updates = {};
+    }
 	this.setIP = function(ip){
 		this.arduino.ip = ip;
 	}
