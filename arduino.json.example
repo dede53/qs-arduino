@@ -1,12 +1,38 @@
 {
-	"version":"0.0.1",
+    "version": "0.0.1",
     "loglevel": 1,
     "port": 2222,
-    "arduinos": [
-		{
-			"id":0,
-			"ip": "192.168.178.2",
-			"port": 49880
-		}
-    ]
+    "arduinos": {
+        "0": {
+            "id": 0,
+            "ip": "192.168.178.2",
+            "updates": {
+                "udp": 49880,
+            }
+        },
+        "1": {
+            "id": 1,
+            "ip": "192.168.178.3",
+            "port": 49880,
+            "user": "Name",
+            "bgColor": "0x003F",
+            "useScreensaver": 0,
+            "notification": "mario",
+            "ledBrightness": 25,
+            "displayTimeout": 10,
+            "updates": {
+                "alerts": 80,
+                "variables": 80,
+                "actions": 80
+            },
+            "devices": [
+                {
+                    "name": "Light",
+                    "id": "1",
+                    "mode": 0,
+                    "sendTimeout": 0
+                }
+            ]
+        }
+    }
 }
